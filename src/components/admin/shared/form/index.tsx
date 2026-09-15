@@ -1,0 +1,12 @@
+export { default as FormDatetimeInput } from "./FormDatetimeInput";
+export { default as FormDiscountInput } from "./FormDiscountInput";
+export { default as FormSwitch } from "./FormSwitch";
+export { default as FormReadonly } from "./FormReadonly";
+export { default as FormImageInput } from "./FormImageInput";
+export { default as FormPriceInput } from "./FormPriceInput";
+export { default as FormSlugInput } from "./FormSlugInput";
+export { default as FormTextInput } from "./FormTextInput";
+export { default as FormTextarea } from "./FormTextarea";
+export { default as FormSelectInput } from "./FormSelectInput";
+export { default as FormPasswordInput} from "./FormPasswordInput";
+export { default as FormColorInput } from "./FormColorInput";
