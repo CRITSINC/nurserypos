@@ -26,7 +26,7 @@ jobs:
           cache: 'npm'
 
       - name: 📦 Install Dependencies
-        run: npm ci -f
+        run: npm install --legacy-peer-deps
 
       - name: 🏗️ Verify Next.js Build
         run: npm run build
@@ -72,8 +72,12 @@ jobs:
             echo "  - User: $(whoami) (HOME=$HOME)"
 
             # 2. Go to frontend directory
-            cd /var/www/glenecho/glenecho-frontend
-            git config --global --add safe.directory /var/www/glenecho/glenecho-frontend 2>/dev/null || true
+            if [ -d "/var/www/glenecho-frontend" ]; then
+              cd /var/www/glenecho-frontend
+            else
+              cd /var/www/glenecho/glenecho-frontend
+            fi
+            git config --global --add safe.directory $(pwd) 2>/dev/null || true
 
             # 3. Pull latest changes securely using GITHUB_TOKEN
             echo "Pulling latest code from GitHub..."
@@ -84,7 +88,7 @@ jobs:
 
             # 4. Install dependencies
             echo "Installing dependencies..."
-            npm install -f
+            npm install --legacy-peer-deps
 
             # 5. Build Next.js application
             echo "Building Next.js application..."
