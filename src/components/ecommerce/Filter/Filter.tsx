@@ -208,7 +208,7 @@ const ShopFilter = ({
                     TAGS
                 ===================================================== */}
 
-                <div className="filter-column">
+                {/* <div className="filter-column">
 
                     <div className="card filter-card">
 
@@ -237,7 +237,7 @@ const ShopFilter = ({
 
                     </div>
 
-                </div>
+                </div> */}
 
                 {/* =====================================================
                     PRICE

@@ -325,6 +325,9 @@ export const productApi = api.injectEndpoints({
       query: () => ({
         url: "product/landing-sections",
         method: "GET",
+        params: {
+          limit: 15,
+        },
       }),
 
       providesTags: ["Products"],

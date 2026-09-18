@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { useLoginMutation } from "@/redux/services/auth";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
@@ -20,7 +20,10 @@ import storage from "@/util/localStorage";
 export default function LoginForm() {
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const searchParams = useSearchParams();
 
+  const hasPendingActionParam =
+      searchParams.get("pendingAction") === "1";
   const auth = useAppSelector((state) => state.auth);
 
   const [login, { isLoading }] = useLoginMutation();
@@ -38,47 +41,74 @@ export default function LoginForm() {
     redirectUser(router, role);
   }, [auth.user, router]);
 
-  const processPendingAction = () => {
+  useEffect(() => {
+    if (!hasPendingActionParam) {
+        sessionStorage.removeItem("pendingAction");
+    }
+}, [hasPendingActionParam]);
+
+const processPendingAction = () => {
+    if (!hasPendingActionParam) {
+        return false;
+    }
+
     const pendingAction = sessionStorage.getItem("pendingAction");
 
     if (!pendingAction) {
-      return false;
+        return false;
     }
 
     try {
-      const action = JSON.parse(pendingAction);
+        const action = JSON.parse(pendingAction);
 
-      if (action.type === "cart" && action.product) {
-        dispatch(
-          addToCart({
-            ...action.product,
-            ...(action.quantity
-              ? { quantity: action.quantity }
-              : {}),
-          })
+        // Pending action expires after 10 minutes
+        const TEN_MINUTES = 10 * 60 * 1000;
+
+        if (
+            !action.createdAt ||
+            Date.now() - action.createdAt > TEN_MINUTES
+        ) {
+            sessionStorage.removeItem("pendingAction");
+            return false;
+        }
+
+        if (action.type === "cart" && action.product) {
+            dispatch(
+                addToCart({
+                    ...action.product,
+                    ...(action.quantity
+                        ? { quantity: action.quantity }
+                        : {}),
+                })
+            );
+
+            toasterSuccess("Product added to cart");
+        }
+
+        if (action.type === "wishlist" && action.product) {
+            dispatch(addToWishlist(action.product));
+
+            toasterSuccess("Added to Wishlist");
+        }
+
+        sessionStorage.removeItem("pendingAction");
+
+        if (action.redirectTo) {
+            router.push(action.redirectTo);
+        }
+
+        return true;
+    } catch (error) {
+        console.error(
+            "Failed to process pending action:",
+            error
         );
 
-        toasterSuccess("Product added to cart");
-      }
+        sessionStorage.removeItem("pendingAction");
 
-      if (action.type === "wishlist" && action.product) {
-        dispatch(addToWishlist(action.product));
-        toasterSuccess("Added to Wishlist");
-      }
-
-      sessionStorage.removeItem("pendingAction");
-
-      if (action.redirectTo) {
-        router.push(action.redirectTo);
-      }
-
-      return true;
-    } catch (error) {
-      console.error("Failed to process pending action:", error);
-      sessionStorage.removeItem("pendingAction");
-      return false;
+        return false;
     }
-  };
+};
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -124,11 +154,23 @@ export default function LoginForm() {
 
       toasterSuccess("Login Successful");
 
-      const hasPendingAction = processPendingAction();
+      const user = response.data.user;
+
+      const role = user?.roles?.role;
+
+      const isNormalUser =
+          role === "User";
+
+      let hasPendingAction = false;
+
+      if (isNormalUser) {
+          hasPendingAction = processPendingAction();
+      } else {
+          sessionStorage.removeItem("pendingAction");
+      }
 
       if (!hasPendingAction) {
-        const role = response.data.user;
-        redirectUser(router, role);
+          redirectUser(router, user);
       }
     } catch (error: any) {
       console.error(error);

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { useGetLandingSectionsQuery } from "@/redux/services/product";
 
 const BestSellerSlider = () => {
-
     const {
         data,
         isLoading,
@@ -12,69 +11,123 @@ const BestSellerSlider = () => {
         refetchOnMountOrArgChange: true,
     });
 
-    const products = (data?.data?.topSelling ?? []).slice(0, 3);
+    const products = (data?.data?.topSelling ?? []).slice(0, 4);
 
+    if (isLoading || isFetching) {
+        return (
+            <div
+                className="d-flex align-items-center justify-content-center"
+                style={{ minHeight: "400px" }}
+            >
+                <div className="text-center">
+                    <img
+                        src="/assets/imgs/theme/loading.gif"
+                        alt="Loading products"
+                        width={80}
+                        height={80}
+                    />
+                    <p className="mt-15 text-muted">
+                        Loading Bestseller Products...
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
-    return (
-        <>
-            {(isLoading || isFetching) ? (
+    if (isError) {
+        return (
+            <div className="col-12 text-center py-5">
                 <div
                     className="d-flex align-items-center justify-content-center"
                     style={{ minHeight: "400px" }}
                 >
-                    <div className="text-center">
-                        <img
-                            src="/assets/imgs/theme/loading.gif"
-                            alt="Loading products"
-                            width={80}
-                            height={80}
-                        />
-                        <p className="mt-15 text-muted">
-                            Loading Bestseller Products...
-                        </p>
-                    </div>
+                    <p className="mt-15 text-muted">
+                        Failed to load Bestseller products.
+                    </p>
                 </div>
-            ) :  isError ? (
-                            <div className="col-12 text-center py-5">
-                                <div
-                                    className="d-flex align-items-center justify-content-center"
-                                    style={{ minHeight: "400px" }}
-                                >
-                                    <div className="text-center">
-                                        <p className="mt-15 text-muted">
-                                            Failed to load Bestseller products.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        )
-                :
-                products?.map((product: any, i: number) => (
-                    <article className="row align-items-center hover-up" key={i}>
-                        <figure className="col-md-4 mb-0">
-                            <Link href={`/products/${product.slug}`}>
-                                <img src={
+            </div>
+        );
+    }
+
+    return (
+        <div className="bottom-product-list">
+            {products.map((product: any) => (
+                <article
+                    className="bottom-product-item"
+                    key={product.id}
+                >
+                    {/* IMAGE */}
+                    <div
+                        className="bottom-product-image"
+                        style={{
+                            width: "33.333%",
+                            minWidth: 0,
+                            height: "90px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                        }}
+                    >
+                        <Link
+                            href={`/products/${product.slug}`}
+                            style={{
+                                width: "100%",
+                                height: "90px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <img
+                                src={
                                     product.images?.length
-                                        ? product.images[0]?.local_path || product.images[0]?.lightspeed_url
+                                        ? product.images[0]?.local_path ||
+                                          product.images[0]?.lightspeed_url
                                         : "/assets/not-available.png"
                                 }
-                                    alt="nest" />
-                            </Link>
-                        </figure>
-                        <div className="col-md-8 mb-0">
-                            <h6>
-                                <Link href={`/products/${product.id}`}>
-                                    {product.description}
-                                </Link>
-                            </h6>
+                                alt={
+                                    product.description || "Product"
+                                }
+                                style={{
+                                    width: "90px",
+                                    height: "90px",
+                                    maxWidth: "90px",
+                                    maxHeight: "90px",
+                                    objectFit: "contain",
+                                    display: "block",
+                                }}
+                            />
+                        </Link>
+                    </div>
 
-                            <div className="product-price">
-                                <span>${product.price} </span>
-                            </div>
+                    {/* PRODUCT INFO */}
+                    <div
+                        className="bottom-product-info"
+                        style={{
+                            width: "66.667%",
+                            minWidth: 0,
+                            height: "90px",
+                            paddingLeft: "15px",
+                            paddingRight: "5px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <h6>
+                            <Link href={`/products/${product.id}`}>
+                                {product.description}
+                            </Link>
+                        </h6>
+
+                        <div className="product-price">
+                            <span>${product.price}</span>
                         </div>
-                    </article>
-                ))}
-        </>
+                    </div>
+                </article>
+            ))}
+        </div>
     );
 };
 

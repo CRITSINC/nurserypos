@@ -46,16 +46,17 @@ const SingleProduct = ({
 
     const handleCart = (product: Product) => {
         if (!authenticated) {
-            sessionStorage.setItem(
-                "pendingAction",
-                JSON.stringify({
-                    type: "cart",
-                    product: product,
-                    redirectTo: window.location.pathname,
-                })
-            );
+        sessionStorage.setItem(
+            "pendingAction",
+            JSON.stringify({
+                type: "cart",
+                product: product,
+                redirectTo: window.location.pathname,
+                createdAt: Date.now(),
+            })
+        );
 
-            router.push("/login");
+        router.push("/login?pendingAction=1");
             return;
         }
 
@@ -77,10 +78,11 @@ const SingleProduct = ({
                     type: "wishlist",
                     product: product,
                     redirectTo: window.location.pathname,
+                    createdAt: Date.now(),
                 })
             );
 
-            router.push("/login");
+            router.push("/login?pendingAction=1");
             return;
         }
 
@@ -170,71 +172,97 @@ const SingleProduct = ({
                             ></i>
                         </button>
                     </div>
-
-                    {/* <div className="product-badges product-badges-position product-badges-mrg">
-                        {product.trending && <span className="hot">Hot</span>}
-                        {product.created && <span className="new">New</span>}
-                        {product.totalSell > 100 && <span className="best">Best Sell</span>}
-                        {product.discount.isActive && <span className="sale">Sale</span>}
-                        {product.discount.percentage >= 5 && <span className="hot">{product.discount.percentage}%</span>}
-                    </div> */}
                 </div>
-                <div className="product-content-wrap">
-                    <div className="product-category">
-                        <Link href="/products">{product.brand?.name}</Link>
-                    </div>
-                    <h2>
-                        <Link href={`/products/${product.id}`}>
-                            {product.description}
-                        </Link>
-                    </h2>
-
-                    {/* <div className="product-rate-cover">
-                        <div className="product-rate d-inline-block">
-                            <div className="product-rating" style={{ width: "90%" }}></div>
+                    <div
+                        className="product-content-wrap"
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
+                        }}
+                    >
+                        <div
+                            className="product-category"
+                            style={{
+                                minHeight: "20px",
+                            }}
+                        >
+                            {product.brand?.name ? (
+                                <Link href="/products">
+                                    {product.brand.name}
+                                </Link>
+                            ) : (
+                                <span>&nbsp;</span>
+                            )}
                         </div>
-                    </div> */}
 
-                    {/* <div>
-                        <span className="font-small text-muted">
-                            By <Link href="/vendor/1">NestFood</Link>
-                        </span>
-                    </div> */}
-
-                    <div className="product-card-bottom">
-                        <div className="product-price">
-                            <span>${product.price} </span>
-                        </div>
-                        {product?.qoh > 0 ? (
-                            <div className="add-cart">
-                                <a
-                                    className="add"
-                                    onClick={() =>
-                                        handleCart(product)
-                                    }
-                                >
-                                    <i
-                                        className={
-                                            authenticated && inCart
-                                                ? "fi-rs-check mr-5"
-                                                : "fi-rs-shopping-cart mr-5"
-                                        }
-                                    ></i>
-
-                                    {authenticated && inCart
-                                        ? "Remove"
-                                        : "Add"}
-                                </a>
+                        <h2
+                            style={{
+                                minHeight: "48px",
+                                marginBottom: "10px",
+                            }}
+                        >
+                            <Link href={`/products/${product.id}`}>
+                                {product.description}
+                            </Link>
+                        </h2>
+                        <div
+                            className="product-card-bottom"
+                            style={{
+                                marginTop: "auto",
+                                minHeight: "45px",
+                                height: "45px",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                            }}
+                        >
+                            <div className="product-price">
+                                <span>${product.price}</span>
                             </div>
-                        ) :
-                            (
-                                <div className="add-cart mt-2">
-                                    Out of Stock
+
+                            {product?.qoh > 0 ? (
+                                <div
+                                    className="add-cart"
+                                    style={{
+                                        height: "45px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        margin: 0,
+                                    }}
+                                >
+                                    <a
+                                        className="add"
+                                        onClick={() => handleCart(product)}
+                                    >
+                                        <i
+                                            className={
+                                                authenticated && inCart
+                                                    ? "fi-rs-check mr-5"
+                                                    : "fi-rs-shopping-cart mr-5"
+                                            }
+                                        ></i>
+
+                                        {authenticated && inCart
+                                            ? "Remove"
+                                            : "Add"}
+                                    </a>
                                 </div>
-                            )
-                        }
+                            ) : (
+                                <div
+                                    className="add-cart"
+                                    style={{
+                                        height: "45px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        margin: 0,
+                                    }}
+                                >
+                                    <span>Out of Stock</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
             </div>
         </>
     );

@@ -7,7 +7,7 @@ import { useGetBrandsQuery } from "@/redux/services/brand";
 
 const BrandsPage = () => {
     const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
+    const [limit, setLimit] = useState(12);
     const [search, setSearch] = useState("");
     const [showDropdown, setShowDropdown] = useState(false);
 
@@ -141,7 +141,7 @@ const BrandsPage = () => {
                                         <div className={`sort-by-dropdown ${showDropdown ? "show" : ""}`}>
                                             <ul>
 
-                                                {[10, 25, 50, 100, 200].map(
+                                                {[12, 25, 50, 100, 200].map(
                                                     (size) => (
                                                         <li key={size}>
                                                             <button

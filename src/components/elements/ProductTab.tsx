@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function ProductTab({ product }: Props) {
-    const [active, setActive] = useState("description");
+    const [active, setActive] = useState("note");
 
     return (
         <div className="product-info">
@@ -18,11 +18,11 @@ export default function ProductTab({ product }: Props) {
                 className="custom-tabs-list">
                     <li>
                         <button
-                            className={`custom-tab-btn ${active === "description" ? "active" : ""
+                            className={`custom-tab-btn ${active === "note" ? "active" : ""
                                 }`}
-                            onClick={() => setActive("description")}
+                            onClick={() => setActive("note")}
                         >
-                            Description
+                            Note
                         </button>
                     </li>
 
@@ -41,15 +41,15 @@ export default function ProductTab({ product }: Props) {
 
             <div className="tab-content shop_info_tab mt-30">
 
-                {active === "description" && (
+                {active === "note" && (
 
                     <div>
 
                         <p>
 
-                            {product.long_description ||
-                                product.description ||
-                                "No description available."}
+                            {product.note ||
+                                product.note ||
+                                "No note available."}
 
                         </p>
 
@@ -103,25 +103,6 @@ export default function ProductTab({ product }: Props) {
                                 </td>
                             </tr>
 
-                            <tr>
-                                <th>Cost</th>
-                                <td>
-                                    $
-                                    {Number(
-                                        product.price ||
-                                        0
-                                    ).toFixed(2)}
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <th>Status</th>
-                                <td>
-                                    {product.archived
-                                        ? "Archived"
-                                        : "Active"}
-                                </td>
-                            </tr>
 
                         </tbody>
 
