@@ -36,6 +36,8 @@ import {
   toasterSuccess,
 } from "@/components/core/Toaster";
 
+type SyncAction = "manual" | "bootstrap" | null;
+
 export default function ManualActions() {
   const { data, isLoading } = useReadOnlyStatusQuery();
 
@@ -50,46 +52,62 @@ export default function ManualActions() {
 
   const [getAuthUrl] = useLazyAuthUrlQuery();
 
-  // Controls the confirmation dialog
+  // Controls the Read-only confirmation dialog
   const [showReadOnlyAlert, setShowReadOnlyAlert] =
     useState(false);
 
-  // Stores the action the user is about to perform
-  // true  = enable
-  // false = disable
+  // Stores the Read-only action
   const [pendingReadOnly, setPendingReadOnly] =
     useState(false);
 
-  /**
-   * Run manual sync
-   */
-  const handleManualSync = async () => {
-    try {
-      const response = await manualSync().unwrap();
+  // Controls the Sync confirmation dialog
+  const [showSyncAlert, setShowSyncAlert] =
+    useState(false);
 
-      toasterSuccess(response.data.message);
+  // Stores which sync action is pending
+  const [pendingSyncAction, setPendingSyncAction] =
+    useState<SyncAction>(null);
+
+  /**
+   * User clicked Run Sync Now
+   */
+  const handleManualSyncClick = () => {
+    setPendingSyncAction("manual");
+    setShowSyncAlert(true);
+  };
+
+  /**
+   * User clicked Bootstrap Sync
+   */
+  const handleBootstrapClick = () => {
+    setPendingSyncAction("bootstrap");
+    setShowSyncAlert(true);
+  };
+
+  /**
+   * Confirm sync action
+   */
+  const handleConfirmSync = async () => {
+    try {
+      if (pendingSyncAction === "manual") {
+        const response = await manualSync().unwrap();
+
+        toasterSuccess(response.data.message);
+      }
+
+      if (pendingSyncAction === "bootstrap") {
+        const response = await bootstrapSync().unwrap();
+
+        toasterSuccess(response.data.message);
+      }
+
+      setShowSyncAlert(false);
+      setPendingSyncAction(null);
     } catch (err: any) {
       toasterError(
         err?.data?.error?.message ??
           err?.data?.message ??
           "Unable to start sync."
-      );
-    }
-  };
-
-  /**
-   * Run bootstrap sync
-   */
-  const handleBootstrap = async () => {
-    try {
-      const response = await bootstrapSync().unwrap();
-
-      toasterSuccess(response.data.message);
-    } catch (err: any) {
-      toasterError(
-        err?.data?.error?.message ??
-          err?.data?.message ??
-          "Unable to start bootstrap."
       );
     }
   };
@@ -146,6 +164,9 @@ export default function ManualActions() {
     }
   };
 
+  const isSyncing =
+    syncing || bootstrapping;
+
   return (
     <>
       <Card>
@@ -154,19 +175,45 @@ export default function ManualActions() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {/* Manual Sync / Bootstrap */}
-          <div className="flex flex-wrap gap-3">
-            <Button
-              onClick={handleManualSync}
-              disabled={syncing}
-            >
-              {syncing ? "Running..." : "Run Sync Now"}
-            </Button>
+          {/* Run Sync Now */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <Label>Manual Sync</Label>
+
+              <p className="text-sm text-muted-foreground">
+                Manually synchronize data with Lightspeed.
+              </p>
+            </div>
 
             <Button
-              variant="secondary"
-              onClick={handleBootstrap}
-              disabled={bootstrapping}
+              type="button"
+              variant="outline"
+              onClick={handleManualSyncClick}
+              disabled={isSyncing}
+              className="h-10 min-w-[160px]"
+            >
+              {syncing
+                ? "Running..."
+                : "Run Sync Now"}
+            </Button>
+          </div>
+
+          {/* Bootstrap Sync */}
+          <div className="flex items-center justify-between rounded-lg border p-4">
+            <div>
+              <Label>Bootstrap Sync</Label>
+
+              <p className="text-sm text-muted-foreground">
+                Start the bootstrap synchronization with Lightspeed.
+              </p>
+            </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleBootstrapClick}
+              disabled={isSyncing}
+              className="h-10 min-w-[160px]"
             >
               {bootstrapping
                 ? "Starting..."
@@ -188,7 +235,9 @@ export default function ManualActions() {
               checked={
                 data?.data.read_only_mode ?? false
               }
-              disabled={isLoading || toggling}
+              disabled={
+                isLoading || toggling
+              }
               onCheckedChange={handleToggle}
             />
           </div>
@@ -204,6 +253,7 @@ export default function ManualActions() {
             </div>
 
             <Button
+              type="button"
               variant="outline"
               onClick={handleConnect}
             >
@@ -212,6 +262,64 @@ export default function ManualActions() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Sync Confirmation */}
+      <AlertDialog
+        open={showSyncAlert}
+        onOpenChange={(open) => {
+          if (!isSyncing) {
+            setShowSyncAlert(open);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingSyncAction === "manual"
+                ? "Run Sync Now?"
+                : "Start Bootstrap Sync?"}
+            </AlertDialogTitle>
+
+            <AlertDialogDescription>
+              {pendingSyncAction === "manual" ? (
+                <>
+                  This will start a manual synchronization
+                  with Lightspeed. Do you want to continue?
+                </>
+              ) : (
+                <>
+                  This will start the bootstrap synchronization
+                  process with Lightspeed. Do you want to
+                  continue?
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <AlertDialogFooter className="flex-row justify-end gap-2">
+            <AlertDialogCancel
+              className="m-0 h-10 w-[94px] min-w-[94px]"
+              disabled={isSyncing}
+            >
+              Cancel
+            </AlertDialogCancel>
+
+            <AlertDialogAction
+              onClick={handleConfirmSync}
+              disabled={isSyncing}
+              className="m-0 h-10 w-[94px] min-w-[94px]"
+            >
+              {pendingSyncAction === "manual"
+                ? syncing
+                  ? "Starting..."
+                  : "Start"
+                : bootstrapping
+                  ? "Starting..."
+                  : "Start"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Read-only Mode Confirmation */}
       <AlertDialog
